@@ -25,7 +25,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 #map.drag{cursor:grabbing}
 svg{width:100%;height:100%;display:block}
 .way{fill:none;stroke:transparent;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
-.way.hl{stroke:var(--accent);stroke-opacity:.6}
 .brand{fill:none;stroke:#d93b2b;stroke-width:3;animation:blink 1s ease-in-out infinite}
 .ov text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;pointer-events:none}
 .ov .pn{font-size:4.4px;font-weight:600;fill:#fff}
@@ -483,8 +482,6 @@ function item(t){const d=distStart(t);
 function renderList(q){
   clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
   const res=find(q);
-  if(!q.trim()){for(const e of Object.values(wayEls))e.classList.add('hl');}
-  else for(const t of res)if(t.type==='Weg')wayEls[t.name].classList.add('hl');
   const ways=res.filter(t=>t.type==='Weg'),orte=res.filter(t=>t.type==='Ort'),parz=res.filter(t=>t.type==='Parzelle');
   body.innerHTML=`<div class="hint">${q.trim()?res.length+' Treffer':'Alle '+ways.length+' Wege und '+orte.length+' Orte · Parzelle: Nummer eintippen'} · Entfernung ungefähr ab Eingang</div>`+
     (ways.length?`<div class="info-sec">Wege</div><ul class="list">${ways.map(item).join('')}</ul>`:'')+
