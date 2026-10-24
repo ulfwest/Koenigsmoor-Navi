@@ -69,6 +69,7 @@ h2{margin:6px 0 2px;font-size:20px}
 .pill.primary{background:var(--route);color:#fff}
 .big{font-size:28px;font-weight:700}
 .sub{color:var(--muted);font-size:14px}
+.steps-line{font-size:14px;line-height:1.4;margin-top:4px}
 .steps{margin:10px 0 0;padding-left:20px;font-size:15px;line-height:1.6}
 
 /* Reiter */
@@ -107,9 +108,12 @@ h2{margin:6px 0 2px;font-size:20px}
   #searchField{flex:1;min-width:0}
   .x{font-size:15px;padding:2px}
   #routeForm{flex:1 1 100%}
-  #routeForm .field{height:32px;flex:none}
+  #routeForm .field{height:30px;flex:none;padding:0 8px}
+  #routeForm .field input{font-size:16px} /* 16px verhindert das Auto-Zoomen auf dem iPhone */
+  .dot{width:9px;height:9px}
+  .steps-line{font-size:12px;margin-top:2px}
   .col{gap:3px}
-  #swapBtn{height:67px;min-width:32px;font-size:14px;border-radius:10px}
+  #swapBtn{height:63px;min-width:32px;font-size:14px;border-radius:10px}
   #sheet{max-height:34vh;border-radius:14px 14px 0 0}
   #sheet.compact{max-height:118px}
   .grab{margin:6px auto 2px}
@@ -554,12 +558,11 @@ function calcRoute(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.r
   drawFootsteps(r.path);
   markStart(pA);markGoal(pB);
   const m=meters(r.len);
+  // knappe Zusammenfassung: Meter + Minuten, darunter die Wege in einer Zeile
   body.innerHTML=`<div><span class="big">ca. ${fmtM(m)}</span> <span class="sub">· ca. ${minutes(m)} Min. zu Fuß</span></div>
-    <div class="sub">${esc(routeFrom.name)} → ${esc(routeTo.name)}</div>
-    <ol class="steps">${r.steps.map(s=>`<li>${esc(s.n)} <span class="sub">(${fmtM(Math.max(10,meters(s.w)))})</span></li>`).join('')}</ol>
-    <div class="hint" style="margin-top:10px">Entfernungen geschätzt (Maßstab aus Parzellenbreite).</div>`;
+    <div class="steps-line">${r.steps.map(s=>`${esc(s.n)} <span class="sub">${fmtM(Math.max(10,meters(s.w)))}</span>`).join(' → ')}</div>`;
   sheet.classList.add('compact');
-  setTimeout(()=>fitBox(bbox(r.path),30),30);
+  setTimeout(()=>fitBox(bbox(r.path),45),30);
 }
 
 renderList('');
