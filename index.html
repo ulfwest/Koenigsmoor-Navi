@@ -168,6 +168,7 @@ h2{margin:6px 0 2px;font-size:20px}
     <button class="tab" data-m="route" title="Route"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2.6" fill="currentColor"/><path d="M6 16.4V14a3.5 3.5 0 0 1 3.5-3.5h5A3.5 3.5 0 0 0 18 7V5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 3.8"/><path d="M18 1.5c-2.2 0-3.6 1.6-3.6 3.5 0 2.5 3.6 6 3.6 6s3.6-3.5 3.6-6c0-1.9-1.4-3.5-3.6-3.5zm0 4.8a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" fill="currentColor"/></svg><span class="lbl"> Route</span></button>
     <button class="tab" data-m="info" title="Info">ℹ<span class="lbl"> Info</span></button>
     <button class="tab" id="shareApp" title="App teilen"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" stroke="currentColor" stroke-width="2"/></svg><span class="lbl"> Teilen</span></button>
+    <button class="tab" id="spendeBtn" title="Espresso spendieren">☕<span class="lbl"> Spende</span></button>
   </div>
   <div class="field" id="searchField">
     <input id="q" placeholder="Weg, Gebäude, Parzelle …" autocomplete="off">
@@ -551,7 +552,7 @@ function showInfo(){setMode('info');clearHl();gR.innerHTML='';gM.innerHTML='';sh
     <a href="mailto:info@erholungszentrum-koenigsmoor.de">info@erholungszentrum-koenigsmoor.de</a></div>
     <div class="hint" style="margin-top:12px">Alle Entfernungen ungefähr, ab Eingang, geschätzt aus dem Lageplan.</div>
     <div class="info-sec">Über diese App</div>
-    <div class="spende">Erstellt von <b>Igelweg 26</b>. Gefällt dir der Wegweiser? Spendier mir gern einen Espresso ☕
+    <div class="spende">Erstellt von <b>Ulf, Igelweg 26</b>. Gefällt dir der Wegweiser? Spendier mir gern einen Espresso ☕
       <a class="pill primary" href="${SPENDE_URL}" target="_blank" rel="noopener">☕ Espresso spendieren (PayPal)</a></div>`;
   body.querySelectorAll('li[data-i]').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
   $('brandLi').onclick=()=>showTarget(TARGETS.find(t=>t.brand));
@@ -618,6 +619,13 @@ async function share(t){
 }
 function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2000);}
 document.addEventListener('click',e=>{if(e.target.closest('#shareApp'))share(null);});
+// Spenden-Knopf in der Leiste: Hinweis auf den Ersteller und PayPal-Link
+function showSpende(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
+  body.innerHTML=`<h2>☕ Espresso spendieren</h2>
+    <div class="spende">Diese App hat <b>Ulf, Igelweg 26</b> für den Campingplatz Königsmoor erstellt – kostenlos und ohne Werbung.
+    Wenn sie dir hilft, freut er sich über einen Espresso.
+    <a class="pill primary" href="${SPENDE_URL}" target="_blank" rel="noopener">☕ Espresso spendieren (PayPal)</a></div>`;}
+$('spendeBtn').onclick=showSpende;
 
 renderList('');
 requestAnimationFrame(()=>setVB(fitAllVB()));
