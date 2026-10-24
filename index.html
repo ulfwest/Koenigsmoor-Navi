@@ -87,6 +87,8 @@ h2{margin:6px 0 2px;font-size:20px}
 .tab .ri{width:1.5em;height:1.5em}
 .pill{display:inline-flex;align-items:center;gap:.35em;white-space:nowrap}
 .toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%);z-index:20;background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px}
+.spende{font-size:14px;line-height:1.5;padding:4px 2px 8px}
+.spende .pill{margin-top:8px;text-decoration:none}
 .tab.on{background:var(--route);color:#fff;font-weight:600}
 
 /* route form */
@@ -286,6 +288,8 @@ const PARCELS = [
 const BRAND = [[407,128],[419,129],[261,165],[341,166],[392,164],[451,181],[341,195],[260,211],[341,211],
   [479,226],[459,236],[168,239],[590,246],[198,252],[259,252],[445,253],[580,274],[598,274],[314,279],
   [341,279],[410,279],[308,296],[637,313],[609,316],[613,330],[451,365],[563,386],[583,386]];
+// Spenden-Link (PayPal) für den Ersteller, Igelweg 26
+const SPENDE_URL='https://www.paypal.com/donate/?business='+encodeURIComponent('osmiga62@gmail.com')+'&item_name='+encodeURIComponent('Espresso für den Königsmoor-Wegweiser')+'&currency_code=EUR';
 const PHONES = [
   {label:"Polizei", nr:"110", sos:true},
   {label:"Feuerwehr / Rettung", nr:"112", sos:true},
@@ -545,7 +549,10 @@ function showInfo(){setMode('info');clearHl();gR.innerHTML='';gM.innerHTML='';sh
     <div class="info-sec">Gebäude, Teiche &amp; Plätze</div><ul class="list">${PLACES.map(o=>item(TARGETS.find(t=>t.name===o.name))).join('')}</ul>
     <div class="info-sec">Anschrift</div><div class="sub" style="line-height:1.6">Erholungszentrum Königsmoor<br>Markfelder Weg 79, 45731 Waltrop<br>
     <a href="mailto:info@erholungszentrum-koenigsmoor.de">info@erholungszentrum-koenigsmoor.de</a></div>
-    <div class="hint" style="margin-top:12px">Alle Entfernungen ungefähr, ab Eingang, geschätzt aus dem Lageplan.</div>`;
+    <div class="hint" style="margin-top:12px">Alle Entfernungen ungefähr, ab Eingang, geschätzt aus dem Lageplan.</div>
+    <div class="info-sec">Über diese App</div>
+    <div class="spende">Erstellt von <b>Igelweg 26</b>. Gefällt dir der Wegweiser? Spendier mir gern einen Espresso ☕
+      <a class="pill primary" href="${SPENDE_URL}" target="_blank" rel="noopener">☕ Espresso spendieren (PayPal)</a></div>`;
   body.querySelectorAll('li[data-i]').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
   $('brandLi').onclick=()=>showTarget(TARGETS.find(t=>t.brand));
   animTo(fitAllVB());}
