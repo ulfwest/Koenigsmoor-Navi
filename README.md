@@ -1,7 +1,7 @@
 # Koenigsmoor-Navi
 Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 
-**Öffnen:** `index.html` im Browser (zusammen mit `lageplan.jpg` im selben Ordner).
+**Öffnen:** `index.html` im Browser (zusammen mit `lageplan.jpg` und `lage.png` im selben Ordner).
 
 ## Funktionen
 - **Suche:** Leeres Feld zeigt alle 17 Wege, Tippen filtert (auch Teilwörter wie „gin“) und markiert passende Wege orange. Ein Treffer zoomt den Plan auf den Weg.
@@ -10,6 +10,8 @@ Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 - **Info:** Wichtige Rufnummern (antippen zum Anrufen), alle Gebäude, Teiche und Plätze.
 - **Brandschutzflächen:** Alle 28 rot markierten Parzellen werden auf Wunsch rot blinkend umkreist (Info → Brandschutz oder Suche „brand“).
 - **Entfernungen:** Jede Liste zeigt ca. Meter ab Eingang; Weglängen geschätzt und auf 10 m gerundet.
+
+- **Plan ↔ Foto (🛰/🗺):** Knopf rechts unten schaltet zwischen Lageplan und Satellitenfoto um; auf dem Foto stehen die Wegnamen. `lage.png` ist ein Google-Maps-Screenshot, per Passpunkten auf die Koordinaten des Lageplans entzerrt.
 
 ## Wege
 Amselweg, Birkenweg, Cliviaweg, Drosselweg, Erlenweg, Fasanenweg, Ginsterweg, Habichtsweg, Igelweg, Kuckucksweg, Lilienweg, Meisenweg, Nelkenweg, Primelweg, Rosenweg, Sonnenweg, Tulpenweg
