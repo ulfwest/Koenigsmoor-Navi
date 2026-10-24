@@ -4,7 +4,7 @@ Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 **Öffnen:** `index.html` im Browser (zusammen mit `lageplan.png` im selben Ordner).
 
 ## Funktionen
-- **Suche:** Leeres Feld zeigt alle 17 Wege, Tippen filtert (auch Teilwörter wie „gin“) und markiert passende Wege orange. Ein Treffer zoomt den Plan auf den Weg.
+- **Suche:** Leeres Feld zeigt alle 17 Wege, Tippen filtert (auch Teilwörter wie „gin“) und markiert passende Wege orange (ohne Blinken). Ein Treffer zoomt den Plan auf den Weg.
 - **Route (➜):** Von–Nach mit kürzestem Weg (als Fußspuren), Entfernung und Gehzeit; ⇅ tauscht Start und Ziel.
 - **Reiter Suchen / Route / Info** oben; bei Route stehen Von und Nach untereinander.
 - **Parzellen:** Nummer in die Suche tippen („12“, „Rosenweg 12“); Treffer zeigen den nächstgelegenen Weg, „Route hierher“ führt hin.
