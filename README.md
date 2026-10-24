@@ -1,7 +1,7 @@
 # Koenigsmoor-Navi
 Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 
-**Öffnen:** `index.html` im Browser (zusammen mit `lageplan.jpg` im selben Ordner).
+**Öffnen:** `index.html` im Browser (zusammen mit `lageplan.png` im selben Ordner).
 
 ## Funktionen
 - **Suche:** Leeres Feld zeigt alle 17 Wege, Tippen filtert (auch Teilwörter wie „gin“) und markiert passende Wege orange. Ein Treffer zoomt den Plan auf den Weg.
@@ -17,4 +17,4 @@ Amselweg, Birkenweg, Cliviaweg, Drosselweg, Erlenweg, Fasanenweg, Ginsterweg, Ha
 ## Annahmen / offen
 - Maßstab 0,9 m pro Bildpixel (aus 12–13 m Parzellenbreite geschätzt), Gehtempo 4 km/h. Anpassen über `M_PER_PX` und `WALK_KMH` in `index.html`.
 - Die unbenannten Verbindungsstücke (`LINKS`) sollten vor Ort geprüft werden.
-- Der Plan hat nur 820×580 px; bei besserer Vorlage lassen sich die Koordinaten neu setzen.
+- Der Lageplan liegt als hochaufgelöstes `lageplan.png` (2000×1415 px) vor; die Weg-Koordinaten bleiben im 820×580-Raster.
