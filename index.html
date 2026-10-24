@@ -27,6 +27,8 @@ svg{width:100%;height:100%;display:block}
 .way{fill:none;stroke:transparent;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
 .way.hl{stroke:var(--accent);stroke-opacity:.85;animation:blink 1s ease-in-out infinite}
 .brand{fill:none;stroke:#d93b2b;stroke-width:3;animation:blink 1s ease-in-out infinite}
+.ov text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;pointer-events:none}
+.ov .wl{font-size:5px;font-weight:600;fill:#f4f4f4;letter-spacing:.1px}
 .way.sel{stroke:var(--accent);stroke-opacity:.95;stroke-width:8}
 @keyframes blink{50%{stroke-opacity:.25}}
 .route{fill:none;stroke:var(--route);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
@@ -131,6 +133,7 @@ h2{margin:6px 0 2px;font-size:20px}
 <body>
 <div id="map"><svg id="svg" viewBox="0 0 820 580">
   <image href="lageplan.png" x="0" y="0" width="820" height="580"/>
+  <g id="overlay"></g>
   <g id="ways"></g>
   <g id="routeG"></g>
   <g id="marks"></g>
@@ -178,8 +181,8 @@ const WAYS = {
   "Drosselweg":  [[631,354],[642,402],[653,450]],
   "Erlenweg":    [[495,355],[549,356],[590,356],[631,354]],
   "Fasanenweg":  [[503,203],[513,240],[523,274],[530,354]],
-  "Ginsterweg":  [[553,212],[565,248],[577,285],[593,354]],
-  "Habichtsweg": [[588,173],[606,237],[620,295],[631,354]],
+  "Ginsterweg":  [[553,212],[563,240],[570,283],[580,320],[589,355]],
+  "Habichtsweg": [[588,173],[595,205],[600,235],[612,280],[625,315],[631,354]],
   "Igelweg":     [[236,150],[284,150],[381,150],[472,151],[530,163],[588,173]],
   "Kuckucksweg": [[472,190],[503,203],[553,212]],
   "Lilienweg":   [[466,198],[473,230],[480,265],[482,273]],
@@ -308,6 +311,46 @@ const $=id=>document.getElementById(id);
 const svg=$('svg'),gW=$('ways'),gR=$('routeG'),gM=$('marks');
 const NS='http://www.w3.org/2000/svg';
 const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+// Scharfe Beschriftung über dem Lageplan (die Schrift im Bild ist beim Hochrechnen unleserlich geworden)
+function drawOverlay(){const g=$('overlay');g.setAttribute('class','ov');
+  const T=(x,y,str,a={})=>{const t=el('text',Object.assign({x,y,'text-anchor':'middle','font-size':4.2,fill:'#222'},a));t.textContent=str;g.appendChild(t);return t;};
+  const box=(x,y,w,h,fill,lines,a={})=>{g.appendChild(el('rect',{x,y,width:w,height:h,fill,rx:1}));
+    const lh=a.lh||4.6,y0=y+h/2-(lines.length-1)*lh/2+1.5;lines.forEach((l,i)=>T(x+w/2,y0+i*lh,l,a));};
+  // Wegnamen: je ein Schild pro längerem Abschnitt, entlang der Straße gedreht
+  for(const [n,pts] of Object.entries(WAYS)){let total=plen(pts),done=0;
+    const segs=pts.slice(1).map((p,i)=>({a:pts[i],b:p,l:dist(pts[i],p)}));
+    const cand=segs.filter(sg=>sg.l>=60);const use=cand.length?cand:[segs.reduce((m,sg)=>sg.l>m.l?sg:m)];
+    for(const sg of use){const m=[(sg.a[0]+sg.b[0])/2,(sg.a[1]+sg.b[1])/2];
+      let ang=Math.atan2(sg.b[1]-sg.a[1],sg.b[0]-sg.a[0])*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
+      T(m[0],m[1]+1.7,n,{class:'wl',transform:`rotate(${ang.toFixed(1)} ${m[0]} ${m[1]})`});}}
+  g.appendChild(el('rect',{x:438.5,y:312,width:5,height:42,fill:'#6c6b69'})); // Reste der alten Sonnenweg-Schrift
+  // Gebäude und Flächen
+  box(453,279,17,24,'#f39200',['Spiel-','platz'],{fill:'#fff','font-size':4});
+  box(471,279,50,24,'#7cb5e6',['Schwimmbecken'],{fill:'#fff','font-size':4.4});
+  box(458,327,33,22,'#c49a5e',['Gaststätte','Königsmoor','79'],{fill:'#fff','font-size':3.6,lh:4.2});
+  box(491,336,20,12,'#8cc2ef',['WC/Duschen'],{fill:'#fff','font-size':3.1});
+  box(510,364,18,10,'#f5ec00',['12'],{'font-size':4.4});box(528,364,18,10,'#f5ec00',['Büro','79'],{'font-size':3.4,lh:3.6});
+  box(120,330,30,34,'#4f8a8b',['Grünabfall','Müllpresse'],{fill:'#fff','font-size':4.2,lh:5});
+  box(252,344,35,11,'#ece0b5',['Wohnhaus'],{'font-size':4.6});
+  g.appendChild(el('circle',{cx:389,cy:447,r:9.5,fill:'#e23b2e'}));T(389,448.6,'Standort',{fill:'#fff','font-size':3.6});
+  g.appendChild(el('rect',{x:386,y:402,width:8,height:32,fill:'#e8e8e8'}));
+  T(390,418,'Gäste',{'font-size':4,transform:'rotate(-90 390 418)'});
+  // Notruf-Tafel
+  g.appendChild(el('rect',{x:632,y:117,width:85,height:96,fill:'#fff',stroke:'#c9302c','stroke-width':.8}));
+  g.appendChild(el('rect',{x:632,y:117,width:85,height:12,fill:'#d93b2b'}));
+  T(674.5,125.3,'Wichtige Rufnummern',{fill:'#fff','font-size':5,'font-weight':700});
+  const L=(y,a,b,bold)=>{T(637,y,a,{'text-anchor':'start','font-size':4.4,'font-weight':bold?700:400});if(b)T(712,y,b,{'text-anchor':'end','font-size':4.4,'font-weight':700});};
+  L(138,'POLIZEI','110');L(146,'FEUERWEHR','112');L(158,'Krankenhaus');L(166,'DATTELN','02363 / 1080');
+  g.appendChild(el('line',{x1:634,y1:176,x2:715,y2:176,stroke:'#ccc','stroke-width':.5}));
+  g.appendChild(el('rect',{x:638,y:184,width:12,height:13,fill:'#d93b2b'}));T(656,192.5,'Brandschutzflächen',{'text-anchor':'start','font-size':4.6});
+  // Fußzeile
+  g.appendChild(el('rect',{x:175,y:478,width:480,height:85,fill:'#fff'}));
+  const F=(x,y,str,b)=>T(x,y,str,{'text-anchor':'start','font-size':5,'font-weight':b?700:400,fill:'#333'});
+  F(190,496,'Erholungszentrum Königsmoor',1);F(190,504,'Markfelder Weg 79, 45731 Waltrop');F(190,512,'info@erholungszentrum-koenigsmoor.de');
+  F(190,524,'Büro / Platzwartin',1);F(190,532,'Mobil: 0176 204 31096');
+  F(465,496,'Betreiber',1);F(465,504,'Campinggemeinschaft Königsmoor GbR');F(465,512,'Talerweg 5, 32425 Minden');F(465,520,'verwaltung@erholungszentrum-koenigsmoor.de');
+}
+drawOverlay();
 const wayEls={};
 for(const [n,pts] of Object.entries(WAYS)){const e=el('polyline',{points:ptsAttr(pts),class:'way'});
   e.addEventListener('click',ev=>{if(moved)return;showWay(n);});wayEls[n]=e;gW.appendChild(e);}
