@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Königsmoor Wegweiser</title>
 <style>
 :root{
@@ -19,7 +19,7 @@
   --bg:#151816; --panel:#1f2321; --text:#ecefec; --muted:#9aa29c; --line:#323833; --chip:#2a2f2c;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;margin:0;height:100%;background:var(--bg);color:var(--text);
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
 #map{position:absolute;inset:0;touch-action:none;cursor:grab;background:#fff}
 #map.drag{cursor:grabbing}
@@ -437,6 +437,10 @@ map.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.deltaY>0?1.15:1/1.1
 function zoomAt(f,px,py){const r=svg.getBoundingClientRect();if(px==null){px=r.left+r.width/2;py=r.top+r.height/2;}
   const cx=vb[0]+(px-r.left)*vb[2]/r.width,cy=vb[1]+(py-r.top)*vb[3]/r.height;
   setVB([cx-(cx-vb[0])*f,cy-(cy-vb[1])*f,vb[2]*f,vb[3]*f]);}
+// Kein Zoomen der ganzen Seite (Zweifinger- oder Doppeltipp-Zoom außerhalb der Karte); gezoomt wird nur der Plan
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('touchmove',e=>{if(e.touches.length>1&&!e.target.closest('#map'))e.preventDefault();},{passive:false});
+let lastTap=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTap<300&&!e.target.closest('input,button,a,li'))e.preventDefault();lastTap=n;},{passive:false});
 $('zin').onclick=()=>zoomAt(1/1.4);$('zout').onclick=()=>zoomAt(1.4);$('zall').onclick=()=>animTo(fitAllVB());
 
 // ---------- Oberfläche ----------
