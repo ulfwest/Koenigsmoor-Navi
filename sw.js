@@ -1,6 +1,6 @@
 // Offline-Speicher für den Königsmoor-Wegweiser.
 // Beim Ändern von App-Dateien VERSION erhöhen, damit Handys die neue Fassung laden.
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = 'koenigsmoor-' + VERSION;
 const FILES = ['./', 'index.html', 'lageplan.png', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png'];
