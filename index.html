@@ -93,13 +93,18 @@ h2{margin:6px 0 2px;font-size:20px}
 
 /* Handy: alles kompakter, damit mehr Plan sichtbar bleibt */
 @media (max-width:600px){
-  #top{left:8px;right:8px;top:8px;gap:4px}
-  .tabs{border-radius:12px;padding:3px;gap:2px}
-  .tab{font-size:13px;padding:6px 2px;border-radius:9px}
-  .field{height:38px;border-radius:12px;padding:0 10px;gap:6px}
-  #routeForm .field{height:36px}
-  .col{gap:4px}
-  #swapBtn{height:76px;min-width:36px;font-size:15px;border-radius:12px}
+  /* Navileiste: Reiter als kleine Symbole, Suchfeld in derselben Zeile */
+  #top{left:6px;right:6px;top:6px;gap:4px;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .tabs{flex:none;border-radius:10px;padding:2px;gap:1px;height:34px}
+  .tab{width:32px;flex:none;font-size:14px;padding:0;border-radius:8px;line-height:30px}
+  .tab .lbl{display:none}
+  .field{height:34px;border-radius:10px;padding:0 8px;gap:6px}
+  #searchField{flex:1;min-width:0}
+  .x{font-size:15px;padding:2px}
+  #routeForm{flex:1 1 100%}
+  #routeForm .field{height:32px;flex:none}
+  .col{gap:3px}
+  #swapBtn{height:67px;min-width:32px;font-size:14px;border-radius:10px}
   #sheet{max-height:34vh;border-radius:14px 14px 0 0}
   #sheet.compact{max-height:118px}
   .grab{margin:6px auto 2px}
@@ -133,12 +138,12 @@ h2{margin:6px 0 2px;font-size:20px}
 
 <div id="top">
   <div class="tabs">
-    <button class="tab on" data-m="search">🔍 Suchen</button>
-    <button class="tab" data-m="route">➜ Route</button>
-    <button class="tab" data-m="info">ℹ Info</button>
+    <button class="tab on" data-m="search" title="Suchen">🔍<span class="lbl"> Suchen</span></button>
+    <button class="tab" data-m="route" title="Route">➜<span class="lbl"> Route</span></button>
+    <button class="tab" data-m="info" title="Info">ℹ<span class="lbl"> Info</span></button>
   </div>
   <div class="field" id="searchField">
-    <input id="q" placeholder="Weg, Gebäude oder Teich suchen …" autocomplete="off">
+    <input id="q" placeholder="Weg, Gebäude, Teich …" autocomplete="off">
     <button class="x" id="qx" title="Leeren">✕</button>
   </div>
   <div id="routeForm">
