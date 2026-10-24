@@ -86,6 +86,7 @@ h2{margin:6px 0 2px;font-size:20px}
 .ri{width:1.35em;height:1.35em;vertical-align:-0.3em;flex:none}
 .tab .ri{width:1.5em;height:1.5em}
 .pill{display:inline-flex;align-items:center;gap:.35em;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%);z-index:20;background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px}
 .tab.on{background:var(--route);color:#fff;font-weight:600}
 
 /* route form */
@@ -512,9 +513,10 @@ function showTarget(t,keepTyping){
   const facts=t.type==='Weg'?`Länge ca. ${fmtM(t.len)} · ${d?ca(d)+' vom Eingang':'am Eingang'}`
     :t.brand?`${BRAND.length} Flächen – im Plan rot umkreist`:(t.start?'Hier geht es los.':`${ca(d)} vom Eingang · ca. ${minutes(d)} Min. zu Fuß`);
   body.innerHTML=`<h2>${t.icon||''} ${esc(t.name)}</h2><div class="sub">${facts}</div>${t.info?`<div style="margin-top:6px">${esc(t.info)}</div>`:''}
-   <div class="row">${t.start||t.brand?'':'<button class="pill primary" id="goHere"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2.6" fill="currentColor"/><path d="M6 16.4V14a3.5 3.5 0 0 1 3.5-3.5h5A3.5 3.5 0 0 0 18 7V5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 3.8"/><path d="M18 1.5c-2.2 0-3.6 1.6-3.6 3.5 0 2.5 3.6 6 3.6 6s3.6-3.5 3.6-6c0-1.9-1.4-3.5-3.6-3.5zm0 4.8a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" fill="currentColor"/></svg> Route hierher</button>'}<button class="pill" id="back">Alle anzeigen</button></div>`;
+   <div class="row">${t.start||t.brand?'':'<button class="pill primary" id="goHere"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2.6" fill="currentColor"/><path d="M6 16.4V14a3.5 3.5 0 0 1 3.5-3.5h5A3.5 3.5 0 0 0 18 7V5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 3.8"/><path d="M18 1.5c-2.2 0-3.6 1.6-3.6 3.5 0 2.5 3.6 6 3.6 6s3.6-3.5 3.6-6c0-1.9-1.4-3.5-3.6-3.5zm0 4.8a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" fill="currentColor"/></svg> Route hierher</button>'}<button class="pill" id="shareT" title="Teilen"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" stroke="currentColor" stroke-width="2"/></svg> Teilen</button><button class="pill" id="back">Alle anzeigen</button></div>`;
   if($('goHere'))$('goHere').onclick=()=>{startRoute(START(),t);};
   $('back').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());};
+  $('shareT').onclick=()=>share(t);
   const fit=()=>{if(t.brand)fitBox(bbox(BRAND),15);else if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);};
   fit();setTimeout(fit,260);
 }
@@ -535,7 +537,8 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const m=b.dataset.m;
 function showInfo(){setMode('info');clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
   for(const o of PLACES){const t=document.createElementNS(NS,'text');t.setAttribute('x',o.p[0]);t.setAttribute('y',o.p[1]+4);
     t.setAttribute('text-anchor','middle');t.setAttribute('font-size','11');t.textContent=o.icon;gM.appendChild(t);}
-  body.innerHTML=`<div class="info-sec">Wichtige Rufnummern</div>
+  body.innerHTML=`<button class="pill primary" id="shareApp" style="margin-top:6px"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" stroke="currentColor" stroke-width="2"/></svg> App teilen</button>
+    <div class="info-sec">Wichtige Rufnummern</div>
     ${PHONES.map(p=>`<a class="tel${p.sos?' sos':''}" href="tel:${p.nr.replace(/\s/g,'')}"><span>${esc(p.label)}</span><b>📞 ${esc(p.nr)}</b></a>`).join('')}
     <div class="info-sec">Brandschutz</div>
     <ul class="list"><li id="brandLi"><span><span class="legend"></span>Alle roten Parzellen sind Brandschutzflächen – freihalten!</span><span class="m">${BRAND.length} ›</span></li></ul>
@@ -598,8 +601,21 @@ function calcRoute(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.r
   setTimeout(()=>fitBox(bbox(r.path),45),30);
 }
 
+// Teilen: App-Link bzw. Link direkt zu einem Ziel (?ziel=Name); ohne Teilen-Menü wird der Link kopiert
+const APP_URL=location.origin+location.pathname;
+async function share(t){
+  const url=t?APP_URL+'?ziel='+encodeURIComponent(t.name):APP_URL;
+  const text=t?`Königsmoor: ${t.name}`:'Königsmoor Wegweiser – Wege, Parzellen, Route und Notrufnummern';
+  try{if(navigator.share){await navigator.share({title:'Königsmoor Wegweiser',text,url});return;}}catch(e){if(e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(text+' '+url);toast('Link kopiert');}catch(e){prompt('Link zum Teilen:',url);}
+}
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2000);}
+document.addEventListener('click',e=>{if(e.target.closest('#shareApp'))share(null);});
+
 renderList('');
 requestAnimationFrame(()=>setVB(fitAllVB()));
+// Direktlink: ?ziel=Parzelle 12 · Rosenweg öffnet das Ziel gleich
+{const z=new URLSearchParams(location.search).get('ziel'),t=z&&TARGETS.find(x=>x.name===z);if(t)setTimeout(()=>showTarget(t),300);}
 window.addEventListener('resize',()=>setVB(vb));
 
 // Als App installierbar und offline nutzbar (siehe sw.js)
