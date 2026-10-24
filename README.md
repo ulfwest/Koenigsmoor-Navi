@@ -24,6 +24,6 @@ Amselweg, Birkenweg, Cliviaweg, Drosselweg, Erlenweg, Fasanenweg, Ginsterweg, Ha
 - **Android (Chrome):** Seite öffnen → Hinweis „App installieren“ bzw. **⋮ → App installieren**.
 - **iPhone (Safari):** Seite öffnen → **Teilen → Zum Home-Bildschirm**.
 - Danach startet der Wegweiser mit eigenem Symbol ohne Browserleiste und funktioniert auch **offline**.
-- **Teilen:** Knopf „Teilen“ bei jedem Weg, Ort oder jeder Parzelle schickt einen Direktlink (`?ziel=…`), „App teilen“ im Info-Reiter den App-Link.
+- **Teilen:** Knopf „Teilen“ bei jedem Weg, Ort oder jeder Parzelle schickt einen Direktlink (`?ziel=…`), der Teilen-Knopf oben in der Leiste (auf jeder Seite) den App-Link.
 - `qr-plakat.png` (A4) zum Ausdrucken und Aufhängen am Eingang.
 - Technik: `manifest.webmanifest`, `sw.js` (Offline-Speicher; bei Änderungen `VERSION` erhöhen), Symbole in `icons/`.
