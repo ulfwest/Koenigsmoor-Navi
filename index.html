@@ -26,6 +26,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
 svg{width:100%;height:100%;display:block}
 .way{fill:none;stroke:transparent;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
 .way.hl{stroke:var(--accent);stroke-opacity:.85;animation:blink 1s ease-in-out infinite}
+.brand{fill:none;stroke:#d93b2b;stroke-width:3;animation:blink 1s ease-in-out infinite}
 .way.sel{stroke:var(--accent);stroke-opacity:.95;stroke-width:8}
 @keyframes blink{50%{stroke-opacity:.25}}
 .route{fill:none;stroke:var(--route);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
@@ -187,6 +188,10 @@ const PLACES = [
   {name:"Sportplatz", icon:"⚽", p:[140,175], info:"Außerhalb des Platzes, nordwestlich."}
 ];
 // Wichtige Rufnummern (aus dem Lageplan)
+// Brandschutzflächen: alle rot markierten Parzellen im Lageplan (Mittelpunkte)
+const BRAND = [[407,128],[419,129],[261,165],[341,166],[392,164],[451,181],[341,195],[260,211],[341,211],
+  [479,226],[459,236],[168,239],[590,246],[198,252],[259,252],[445,253],[580,274],[598,274],[314,279],
+  [341,279],[410,279],[308,296],[637,313],[609,316],[613,330],[451,365],[563,386],[583,386]];
 const PHONES = [
   {label:"Polizei", nr:"110", sos:true},
   {label:"Feuerwehr / Rettung", nr:"112", sos:true},
@@ -252,7 +257,9 @@ function shortest(pA,pB){
 const TARGETS=[
   ...Object.entries(WAYS).map(([n,pts])=>({name:n,type:'Weg',pts,len:meters(plen(pts)),
      p:pts[Math.floor(pts.length/2)] && midpoint(pts)})),
-  ...PLACES.map(o=>({name:o.name,type:'Ort',p:o.p,start:o.start,icon:o.icon,info:o.info}))
+  ...PLACES.map(o=>({name:o.name,type:'Ort',p:o.p,start:o.start,icon:o.icon,info:o.info})),
+  {name:'Brandschutzflächen',type:'Ort',icon:'🟥',brand:true,p:[400,250],
+   info:`Alle ${BRAND.length} rot markierten Parzellen sind Brandschutzflächen. Bitte immer freihalten – nicht bebauen, nicht zuparken.`}
 ];
 function midpoint(pts){let h=plen(pts)/2;for(let i=1;i<pts.length;i++){const d=dist(pts[i-1],pts[i]);
   if(h<=d){const t=h/d;return [pts[i-1][0]+t*(pts[i][0]-pts[i-1][0]),pts[i-1][1]+t*(pts[i][1]-pts[i-1][1])];}h-=d;}return pts[0];}
@@ -320,7 +327,7 @@ function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const START=()=>TARGETS.find(t=>t.start);
 const fromStart=new Map();
 function distStart(t){ // ungefähre Gehstrecke vom Eingang
-  if(t.start)return 0;if(fromStart.has(t))return fromStart.get(t);
+  if(t.start)return 0;if(t.brand)return null;if(fromStart.has(t))return fromStart.get(t);
   const s=START(),r=shortest(anchor(s,t),anchor(t,s));const m=r?meters(r.len):null;fromStart.set(t,m);return m;}
 const ca=m=>m==null?'':m===0?'hier':'ca. '+fmtM(Math.max(10,m));
 function item(t){const d=distStart(t);
@@ -344,16 +351,16 @@ function showTarget(t,keepTyping){
   if(mode!=='search')setMode('search');
   current=t;clearHl();gR.innerHTML='';gM.innerHTML='';
   if(!keepTyping)$('q').value=t.name;
-  if(t.type==='Weg'){wayEls[t.name].classList.add('sel');}else markGoal(t.p);
+  if(t.type==='Weg'){wayEls[t.name].classList.add('sel');}else if(t.brand)markBrand();else markGoal(t.p);
   sheet.classList.add('compact');
   const d=distStart(t);
   const facts=t.type==='Weg'?`Länge ca. ${fmtM(t.len)} · ${d?ca(d)+' vom Eingang':'am Eingang'}`
-    :(t.start?'Hier geht es los.':`${ca(d)} vom Eingang · ca. ${minutes(d)} Min. zu Fuß`);
+    :t.brand?`${BRAND.length} Flächen – im Plan rot umkreist`:(t.start?'Hier geht es los.':`${ca(d)} vom Eingang · ca. ${minutes(d)} Min. zu Fuß`);
   body.innerHTML=`<h2>${t.icon||''} ${esc(t.name)}</h2><div class="sub">${facts}</div>${t.info?`<div style="margin-top:6px">${esc(t.info)}</div>`:''}
-   <div class="row">${t.start?'':'<button class="pill primary" id="goHere">➜ Route hierher</button>'}<button class="pill" id="back">Alle anzeigen</button></div>`;
+   <div class="row">${t.start||t.brand?'':'<button class="pill primary" id="goHere">➜ Route hierher</button>'}<button class="pill" id="back">Alle anzeigen</button></div>`;
   if($('goHere'))$('goHere').onclick=()=>{startRoute(START(),t);};
   $('back').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());};
-  const fit=()=>{if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);};
+  const fit=()=>{if(t.brand)fitBox(bbox(BRAND),15);else if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);};
   fit();setTimeout(fit,260);
 }
 $('q').addEventListener('input',e=>renderList(e.target.value));
@@ -375,14 +382,17 @@ function showInfo(){setMode('info');clearHl();gR.innerHTML='';gM.innerHTML='';sh
     t.setAttribute('text-anchor','middle');t.setAttribute('font-size','11');t.textContent=o.icon;gM.appendChild(t);}
   body.innerHTML=`<div class="info-sec">Wichtige Rufnummern</div>
     ${PHONES.map(p=>`<a class="tel${p.sos?' sos':''}" href="tel:${p.nr.replace(/\s/g,'')}"><span>${esc(p.label)}</span><b>📞 ${esc(p.nr)}</b></a>`).join('')}
-    <div class="hint"><span class="legend"></span>Rote Parzellen im Plan = Brandschutzflächen (freihalten)</div>
+    <div class="info-sec">Brandschutz</div>
+    <ul class="list"><li id="brandLi"><span><span class="legend"></span>Alle roten Parzellen sind Brandschutzflächen – freihalten!</span><span class="m">${BRAND.length} ›</span></li></ul>
     <div class="info-sec">Gebäude, Teiche &amp; Plätze</div><ul class="list">${PLACES.map(o=>item(TARGETS.find(t=>t.name===o.name))).join('')}</ul>
     <div class="info-sec">Anschrift</div><div class="sub" style="line-height:1.6">Erholungszentrum Königsmoor<br>Markfelder Weg 79, 45731 Waltrop<br>
     <a href="mailto:info@erholungszentrum-koenigsmoor.de">info@erholungszentrum-koenigsmoor.de</a></div>
     <div class="hint" style="margin-top:12px">Alle Entfernungen ungefähr, ab Eingang, geschätzt aus dem Lageplan.</div>`;
-  body.querySelectorAll('li').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
+  body.querySelectorAll('li[data-i]').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
+  $('brandLi').onclick=()=>showTarget(TARGETS.find(t=>t.brand));
   animTo(fitAllVB());}
-function startRoute(from,to){setMode('route');if(to&&to.start)to=null;routeFrom=asTarget(from);routeTo=to?asTarget(to):null;
+function markBrand(){for(const p of BRAND)gM.appendChild(el('circle',{cx:p[0],cy:p[1],r:10,class:'brand'}));}
+function startRoute(from,to){setMode('route');if(to&&(to.start||to.brand))to=null;routeFrom=asTarget(from);routeTo=to?asTarget(to):null;
   $('from').value=routeFrom?routeFrom.name:'';$('to').value=routeTo?routeTo.name:'';
   if(!routeTo){$('to').focus();showSugg($('to'));}calcRoute();}
 function asTarget(x){return x&&(x.type?x:TARGETS.find(t=>t.name===x.name));}

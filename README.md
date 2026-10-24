@@ -7,7 +7,8 @@ Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 - **Suche:** Leeres Feld zeigt alle 17 Wege, Tippen filtert (auch Teilwörter wie „gin“) und markiert passende Wege orange. Ein Treffer zoomt den Plan auf den Weg.
 - **Route (➜):** Von–Nach mit kürzestem Weg (blau), Entfernung und Gehzeit; ⇅ tauscht Start und Ziel.
 - **Reiter Suchen / Route / Info** oben; bei Route stehen Von und Nach untereinander.
-- **Info:** Wichtige Rufnummern (antippen zum Anrufen), Brandschutzflächen, alle Gebäude, Teiche und Plätze.
+- **Info:** Wichtige Rufnummern (antippen zum Anrufen), alle Gebäude, Teiche und Plätze.
+- **Brandschutzflächen:** Alle 28 rot markierten Parzellen werden auf Wunsch rot blinkend umkreist (Info → Brandschutz oder Suche „brand“).
 - **Entfernungen:** Jede Liste zeigt ca. Meter ab Eingang; Weglängen geschätzt und auf 10 m gerundet.
 
 ## Wege
