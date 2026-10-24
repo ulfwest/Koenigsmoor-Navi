@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Königsmoor Wegweiser</title>
+<meta name="description" content="Wege, Parzellen, Routen und Notrufnummern für den Campingplatz Königsmoor">
+<meta name="theme-color" content="#1f6fe0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Königsmoor">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
   --bg:#f4f4f1; --panel:#ffffff; --text:#1f2421; --muted:#6b726d; --line:#dfe2dd;
@@ -592,6 +601,9 @@ function calcRoute(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.r
 renderList('');
 requestAnimationFrame(()=>setVB(fitAllVB()));
 window.addEventListener('resize',()=>setVB(vb));
+
+// Als App installierbar und offline nutzbar (siehe sw.js)
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
