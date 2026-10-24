@@ -34,7 +34,7 @@ svg{width:100%;height:100%;display:block}
 .route-line{fill:none;stroke:var(--route);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
 
 /* top bar */
-#top{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:8px;z-index:5;max-width:520px}
+#top{position:absolute;left:12px;right:12px;top:12px;display:flex;flex-direction:column;gap:6px;z-index:5;max-width:520px}
 .field{flex:1;display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:14px;
   padding:0 12px;box-shadow:0 2px 10px rgba(0,0,0,.15);height:48px}
 .field input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;min-width:0}
@@ -47,7 +47,7 @@ svg{width:100%;height:100%;display:block}
 #sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--panel);
   border-radius:18px 18px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.18);max-height:46vh;display:flex;flex-direction:column;
   max-width:520px;margin:0 auto;transition:max-height .25s}
-#sheet.compact{max-height:150px}
+#sheet.compact{max-height:175px}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 4px;flex:none;cursor:pointer}
 #sheetBody{overflow-y:auto;padding:4px 16px 16px}
 .hint{color:var(--muted);font-size:13px;margin:4px 0 8px}
@@ -65,15 +65,29 @@ h2{margin:6px 0 2px;font-size:20px}
 .sub{color:var(--muted);font-size:14px}
 .steps{margin:10px 0 0;padding-left:20px;font-size:15px;line-height:1.6}
 
+/* Reiter */
+.tabs{display:flex;background:var(--panel);border-radius:14px;padding:4px;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.tab{flex:1;border:0;background:transparent;color:var(--text);font-size:15px;padding:9px 4px;border-radius:10px;cursor:pointer}
+.tab.on{background:var(--route);color:#fff;font-weight:600}
+
 /* route form */
-#routeForm{display:none;flex-direction:column;gap:6px;flex:1}
+#routeForm{display:none}
+.rf{display:flex;gap:8px;align-items:center}
+.col{flex:1;display:flex;flex-direction:column;gap:6px}
 #routeForm .field{height:44px}
+#swapBtn{height:94px;min-width:44px}
+.info-sec{margin:12px 0 4px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tel{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);color:var(--text);text-decoration:none}
+.tel b{color:var(--route);font-size:17px}
+.tel.sos b{color:var(--goal)}
+.ico{display:inline-block;width:22px}
+.legend{display:inline-block;width:14px;height:14px;background:#d93b2b;border-radius:3px;vertical-align:-2px;margin-right:6px}
 .dot{width:12px;height:12px;border-radius:50%;flex:none}
 .dot.s{background:var(--start)} .dot.g{background:var(--goal);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
 #sugg{position:absolute;left:12px;right:12px;top:118px;z-index:7;max-width:520px;background:var(--panel);
   border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);max-height:40vh;overflow:auto;display:none;padding:0 12px}
 #zoom{position:absolute;right:12px;bottom:calc(46vh + 12px);z-index:5;display:flex;flex-direction:column;gap:6px}
-#sheet.compact ~ #zoom{bottom:162px}
+#sheet.compact ~ #zoom{bottom:187px}
 #zoom .btn{height:42px;min-width:42px}
 </style>
 </head>
@@ -86,18 +100,23 @@ h2{margin:6px 0 2px;font-size:20px}
 </svg></div>
 
 <div id="top">
+  <div class="tabs">
+    <button class="tab on" data-m="search">🔍 Suchen</button>
+    <button class="tab" data-m="route">➜ Route</button>
+    <button class="tab" data-m="info">ℹ Info</button>
+  </div>
   <div class="field" id="searchField">
-    <span>🔍</span>
-    <input id="q" placeholder="Weg oder Ort suchen …" autocomplete="off">
+    <input id="q" placeholder="Weg, Gebäude oder Teich suchen …" autocomplete="off">
     <button class="x" id="qx" title="Leeren">✕</button>
   </div>
   <div id="routeForm">
-    <div class="field"><span class="dot s"></span><input id="from" placeholder="Von …" autocomplete="off"></div>
-    <div class="field"><span class="dot g"></span><input id="to" placeholder="Nach …" autocomplete="off"></div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:6px">
-    <button class="btn primary" id="modeBtn" title="Route planen">➜</button>
-    <button class="btn" id="swapBtn" title="Start und Ziel tauschen" style="display:none">⇅</button>
+    <div class="rf">
+      <div class="col">
+        <div class="field"><span class="dot s"></span><input id="from" placeholder="Von …" autocomplete="off"></div>
+        <div class="field"><span class="dot g"></span><input id="to" placeholder="Nach …" autocomplete="off"></div>
+      </div>
+      <button class="btn" id="swapBtn" title="Start und Ziel tauschen">⇅</button>
+    </div>
   </div>
 </div>
 <div id="sugg"></div>
@@ -144,22 +163,35 @@ const LINKS = [
   [[385,306],[390,360],[395,440],[403,447]],
   [[447,355],[495,355]],
   [[472,151],[472,190],[472,194],[466,198]],
-  [[403,447],[505,448],[548,448],[612,449],[653,450]]
+  [[403,447],[505,448],[548,448],[612,449],[653,450]],
+  [[105,307],[106,346],[108,440]]
 ];
+// Gebäude, Teiche und Plätze (Punkt = Bildpixel im Lageplan)
 const PLACES = [
-  {name:"Standort / Eingang", p:[403,442], start:true},
-  {name:"Büro (79)", p:[535,372]},
-  {name:"Schwimmbecken", p:[490,290]},
-  {name:"Spielplatz", p:[465,290]},
-  {name:"Gedenkstätte Königsmoor", p:[473,337]},
-  {name:"WC / Duschen", p:[509,338]},
-  {name:"Wohnhaus (77)", p:[265,340]},
-  {name:"Haus 75", p:[330,410]},
-  {name:"Grünabfall / Müllpresse", p:[105,340]},
-  {name:"Kinderspielfläche", p:[562,198]},
-  {name:"Sportplatz", p:[140,175]},
-  {name:"Teiche", p:[200,400]},
-  {name:"Parkplatz Gäste", p:[392,400]}
+  {name:"Standort / Eingang", icon:"📍", p:[403,442], start:true, info:"Roter Punkt „Standort“ am Lageplan unten an der Zufahrt."},
+  {name:"Büro (79)", icon:"🏢", p:[535,372], info:"Büro / Platzwartin. Telefon unter „Info“."},
+  {name:"Gaststätte Königsmoor (79)", icon:"🍽️", p:[473,337], info:"Gaststätte am Platz zwischen Sonnenweg und Schwimmbecken."},
+  {name:"WC / Duschen", icon:"🚿", p:[509,338], info:"Sanitärgebäude neben der Gaststätte."},
+  {name:"Schwimmbecken", icon:"🏊", p:[490,290], info:"Am Ende des Primelwegs, neben dem Spielplatz."},
+  {name:"Spielplatz", icon:"🛝", p:[464,290], info:"Direkt neben dem Schwimmbecken."},
+  {name:"Wohnhaus (77)", icon:"🏠", p:[268,352], info:"Wohnhaus Nr. 77 südlich vom Tulpenweg."},
+  {name:"Haus 75", icon:"🏠", p:[330,420], info:"Gebäude Nr. 75 neben dem Gästeparkplatz."},
+  {name:"Angelteich (groß)", icon:"🎣", p:[223,408], info:"Großer Angelteich auf der Wiese südlich der Parkplätze."},
+  {name:"Kleine Angelteiche", icon:"🎣", p:[160,410], info:"Fünf kleine Teiche westlich vom großen Angelteich."},
+  {name:"Grünabfall / Müllpresse", icon:"♻️", p:[134,346], info:"Am westlichen Rand, unterhalb vom Tulpenweg."},
+  {name:"Parkplätze", icon:"🅿️", p:[190,338], info:"Drei Parkreihen zwischen Tulpenweg und Angelteichen."},
+  {name:"Gästeparkplatz", icon:"🅿️", p:[392,400], info:"Schmaler Parkstreifen „Gäste“ an der Zufahrt."},
+  {name:"Parkplatz am Büro", icon:"🅿️", p:[485,390], info:"Parkfläche zwischen Haus 25 und Amselweg."},
+  {name:"Gelbe Fläche Parz. 13", icon:"🟨", p:[128,318], info:"Gelb markierte Sonderfläche – Beschriftung im Plan nicht lesbar."},
+  {name:"Gelbe Fläche Parz. 22", icon:"🟨", p:[562,198], info:"Gelb markierte Sonderfläche am Kuckucksweg – Beschriftung im Plan nicht lesbar."},
+  {name:"Sportplatz", icon:"⚽", p:[140,175], info:"Außerhalb des Platzes, nordwestlich."}
+];
+// Wichtige Rufnummern (aus dem Lageplan)
+const PHONES = [
+  {label:"Polizei", nr:"110", sos:true},
+  {label:"Feuerwehr / Rettung", nr:"112", sos:true},
+  {label:"Krankenhaus Datteln", nr:"02363 1080"},
+  {label:"Büro / Platzwartin (mobil)", nr:"0176 20431096"}
 ];
 
 // ---------- Geometrie ----------
@@ -177,8 +209,13 @@ function node(p){const k=key(p);if(nodeIdx.has(k))return nodeIdx.get(k);
   const i=nodes.length;nodes.push(p);adj.push([]);nodeIdx.set(k,i);return i;}
 function addLine(pts,name){for(let i=1;i<pts.length;i++){const a=node(pts[i-1]),b=node(pts[i]);
   const w=dist(pts[i-1],pts[i]);adj[a].push([b,w,name]);adj[b].push([a,w,name]);segs.push({a,b,name});}}
-for(const [n,pts] of Object.entries(WAYS)) addLine(pts,n);
-for(const l of LINKS) addLine(l,null);
+// Einmündungen verknüpfen: Endpunkte, die auf einem anderen Weg liegen, werden dort als Knoten eingefügt
+const LINES=[...Object.entries(WAYS).map(([n,pts])=>({n,pts:pts.map(p=>p.slice())})),...LINKS.map(l=>({n:null,pts:l.map(p=>p.slice())}))];
+for(const L of LINES)for(const e of [L.pts[0],L.pts[L.pts.length-1]])for(const M of LINES){if(M===L)continue;
+  if(M.pts.some(p=>dist(p,e)<4)){M.pts.forEach((p,i)=>{if(dist(p,e)<4)M.pts[i]=e;});continue;}
+  for(let i=1;i<M.pts.length;i++){const A=M.pts[i-1],B=M.pts[i],dx=B[0]-A[0],dy=B[1]-A[1],t=((e[0]-A[0])*dx+(e[1]-A[1])*dy)/(dx*dx+dy*dy);
+    if(t>0&&t<1&&dist(e,[A[0]+t*dx,A[1]+t*dy])<4){M.pts.splice(i,0,e);break;}}}
+for(const L of LINES) addLine(L.pts,L.n);
 
 function project(p){ // nächster Punkt auf dem Wegenetz
   let best=null;
@@ -215,12 +252,12 @@ function shortest(pA,pB){
 const TARGETS=[
   ...Object.entries(WAYS).map(([n,pts])=>({name:n,type:'Weg',pts,len:meters(plen(pts)),
      p:pts[Math.floor(pts.length/2)] && midpoint(pts)})),
-  ...PLACES.map(o=>({name:o.name,type:'Ort',p:o.p,start:o.start}))
+  ...PLACES.map(o=>({name:o.name,type:'Ort',p:o.p,start:o.start,icon:o.icon,info:o.info}))
 ];
 function midpoint(pts){let h=plen(pts)/2;for(let i=1;i<pts.length;i++){const d=dist(pts[i-1],pts[i]);
   if(h<=d){const t=h/d;return [pts[i-1][0]+t*(pts[i][0]-pts[i-1][0]),pts[i-1][1]+t*(pts[i][1]-pts[i-1][1])];}h-=d;}return pts[0];}
 const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss');
-function find(q){q=norm(q.trim());if(!q)return TARGETS.filter(t=>t.type==='Weg');
+function find(q){q=norm(q.trim());if(!q)return TARGETS.slice();
   return TARGETS.filter(t=>norm(t.name).includes(q)).sort((a,b)=>norm(a.name).indexOf(q)-norm(b.name).indexOf(q));}
 
 // ---------- Zeichnen ----------
@@ -275,47 +312,77 @@ $('zin').onclick=()=>zoomAt(1/1.4);$('zout').onclick=()=>zoomAt(1.4);$('zall').o
 
 // ---------- Oberfläche ----------
 const sheet=$('sheet'),body=$('sheetBody');
+new MutationObserver(()=>body.scrollTop=0).observe(body,{childList:true});
 let mode='search',current=null,routeFrom=null,routeTo=null;
 $('grab').onclick=()=>sheet.classList.toggle('compact');
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
+const START=()=>TARGETS.find(t=>t.start);
+const fromStart=new Map();
+function distStart(t){ // ungefähre Gehstrecke vom Eingang
+  if(t.start)return 0;if(fromStart.has(t))return fromStart.get(t);
+  const s=START(),r=shortest(anchor(s,t),anchor(t,s));const m=r?meters(r.len):null;fromStart.set(t,m);return m;}
+const ca=m=>m==null?'':m===0?'hier':'ca. '+fmtM(Math.max(10,m));
+function item(t){const d=distStart(t);
+  return `<li data-i="${TARGETS.indexOf(t)}"><span>${t.icon?`<span class="ico">${t.icon}</span>`:''}${esc(t.name)}${t.type==='Weg'?`<span class="k">${fmtM(t.len)} lang</span>`:''}</span><span class="m">${ca(d)}</span></li>`;}
 function renderList(q){
   clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
   const res=find(q);
   if(!q.trim()){for(const e of Object.values(wayEls))e.classList.add('hl');}
   else for(const t of res)if(t.type==='Weg')wayEls[t.name].classList.add('hl');
-  body.innerHTML=`<div class="hint">${q.trim()?res.length+' Treffer':'Alle '+Object.keys(WAYS).length+' Wege – tippen zum Suchen'}</div>`+
-    (res.length?`<ul class="list">${res.map((t,i)=>`<li data-i="${TARGETS.indexOf(t)}"><span>${esc(t.name)}<span class="k">${t.type}</span></span><span class="m">${t.len?'≈ '+fmtM(t.len):''}</span></li>`).join('')}</ul>`
-    :`<div class="hint">Nichts gefunden. Versuch es mit einem Teil des Namens, z. B. „gin“.</div>`);
+  const ways=res.filter(t=>t.type==='Weg'),orte=res.filter(t=>t.type==='Ort');
+  body.innerHTML=`<div class="hint">${q.trim()?res.length+' Treffer':'Alle '+ways.length+' Wege und '+orte.length+' Orte'} · Entfernung ungefähr ab Eingang</div>`+
+    (ways.length?`<div class="info-sec">Wege</div><ul class="list">${ways.map(item).join('')}</ul>`:'')+
+    (orte.length?`<div class="info-sec">Gebäude, Teiche &amp; Plätze</div><ul class="list">${orte.map(item).join('')}</ul>`:'')+
+    (res.length?'':`<div class="hint">Nichts gefunden. Versuch es mit einem Teil des Namens, z. B. „gin“ oder „teich“.</div>`);
   body.querySelectorAll('li').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
   if(q.trim()&&res.length===1)showTarget(res[0],true);
 }
 function showWay(n){showTarget(TARGETS.find(t=>t.name===n));}
 function showTarget(t,keepTyping){
   if(mode==='route'){return;}
+  if(mode!=='search')setMode('search');
   current=t;clearHl();gR.innerHTML='';gM.innerHTML='';
   if(!keepTyping)$('q').value=t.name;
-  if(t.type==='Weg'){wayEls[t.name].classList.add('sel');fitBox(bbox(t.pts),35);}
-  else{markGoal(t.p);fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);}
+  if(t.type==='Weg'){wayEls[t.name].classList.add('sel');}else markGoal(t.p);
   sheet.classList.add('compact');
-  body.innerHTML=`<h2>${esc(t.name)}</h2><div class="sub">${t.type==='Weg'?'Länge ca. '+fmtM(t.len)+' · ca. '+minutes(t.len)+' Min. zu Fuß':'Ort auf dem Platz'}</div>
-   <div class="row"><button class="pill primary" id="goHere">➜ Route hierher</button><button class="pill" id="back">Alle Wege</button></div>`;
-  $('goHere').onclick=()=>{startRoute(PLACES[0],t);};
+  const d=distStart(t);
+  const facts=t.type==='Weg'?`Länge ca. ${fmtM(t.len)} · ${d?ca(d)+' vom Eingang':'am Eingang'}`
+    :(t.start?'Hier geht es los.':`${ca(d)} vom Eingang · ca. ${minutes(d)} Min. zu Fuß`);
+  body.innerHTML=`<h2>${t.icon||''} ${esc(t.name)}</h2><div class="sub">${facts}</div>${t.info?`<div style="margin-top:6px">${esc(t.info)}</div>`:''}
+   <div class="row">${t.start?'':'<button class="pill primary" id="goHere">➜ Route hierher</button>'}<button class="pill" id="back">Alle anzeigen</button></div>`;
+  if($('goHere'))$('goHere').onclick=()=>{startRoute(START(),t);};
   $('back').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());};
-  setTimeout(()=>{if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);},260);
+  const fit=()=>{if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);};
+  fit();setTimeout(fit,260);
 }
 $('q').addEventListener('input',e=>renderList(e.target.value));
 $('q').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=find(e.target.value);if(r.length)showTarget(r[0]);e.target.blur();}});
 $('qx').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());$('q').focus();};
 
-// Route
-function setMode(m){mode=m;$('searchField').style.display=m==='search'?'flex':'none';
-  $('routeForm').style.display=m==='route'?'flex':'none';$('swapBtn').style.display=m==='route'?'block':'none';
-  $('modeBtn').textContent=m==='route'?'✕':'➜';$('modeBtn').title=m==='route'?'Routenplanung schließen':'Route planen';
-  $('modeBtn').classList.toggle('primary',m==='search');}
-$('modeBtn').onclick=()=>{if(mode==='route'){setMode('search');$('sugg').style.display='none';$('q').value='';renderList('');animTo(fitAllVB());}
-  else startRoute(PLACES[0],current);};
-function startRoute(from,to){setMode('route');routeFrom=asTarget(from);routeTo=to?asTarget(to):null;
+// Reiter
+function setMode(m){mode=m;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('searchField').style.display=m==='search'?'flex':'none';
+  $('routeForm').style.display=m==='route'?'block':'none';
+  $('sugg').style.display='none';}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(m===mode)return;
+  if(m==='search'){setMode('search');$('q').value=current?current.name:'';current?showTarget(current):renderList('');}
+  else if(m==='route')startRoute(routeFrom||START(),routeTo||current);
+  else showInfo();});
+function showInfo(){setMode('info');clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
+  for(const o of PLACES){const t=document.createElementNS(NS,'text');t.setAttribute('x',o.p[0]);t.setAttribute('y',o.p[1]+4);
+    t.setAttribute('text-anchor','middle');t.setAttribute('font-size','11');t.textContent=o.icon;gM.appendChild(t);}
+  body.innerHTML=`<div class="info-sec">Wichtige Rufnummern</div>
+    ${PHONES.map(p=>`<a class="tel${p.sos?' sos':''}" href="tel:${p.nr.replace(/\s/g,'')}"><span>${esc(p.label)}</span><b>📞 ${esc(p.nr)}</b></a>`).join('')}
+    <div class="hint"><span class="legend"></span>Rote Parzellen im Plan = Brandschutzflächen (freihalten)</div>
+    <div class="info-sec">Gebäude, Teiche &amp; Plätze</div><ul class="list">${PLACES.map(o=>item(TARGETS.find(t=>t.name===o.name))).join('')}</ul>
+    <div class="info-sec">Anschrift</div><div class="sub" style="line-height:1.6">Erholungszentrum Königsmoor<br>Markfelder Weg 79, 45731 Waltrop<br>
+    <a href="mailto:info@erholungszentrum-koenigsmoor.de">info@erholungszentrum-koenigsmoor.de</a></div>
+    <div class="hint" style="margin-top:12px">Alle Entfernungen ungefähr, ab Eingang, geschätzt aus dem Lageplan.</div>`;
+  body.querySelectorAll('li').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
+  animTo(fitAllVB());}
+function startRoute(from,to){setMode('route');if(to&&to.start)to=null;routeFrom=asTarget(from);routeTo=to?asTarget(to):null;
   $('from').value=routeFrom?routeFrom.name:'';$('to').value=routeTo?routeTo.name:'';
   if(!routeTo){$('to').focus();showSugg($('to'));}calcRoute();}
 function asTarget(x){return x&&(x.type?x:TARGETS.find(t=>t.name===x.name));}
@@ -348,7 +415,7 @@ function calcRoute(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.r
   gR.appendChild(el('polyline',{points:ptsAttr(r.path),class:'route-line'}));
   markStart(pA);markGoal(pB);
   const m=meters(r.len);
-  body.innerHTML=`<div><span class="big">${fmtM(m)}</span> <span class="sub">· ca. ${minutes(m)} Min. zu Fuß</span></div>
+  body.innerHTML=`<div><span class="big">ca. ${fmtM(m)}</span> <span class="sub">· ca. ${minutes(m)} Min. zu Fuß</span></div>
     <div class="sub">${esc(routeFrom.name)} → ${esc(routeTo.name)}</div>
     <ol class="steps">${r.steps.map(s=>`<li>${esc(s.n)} <span class="sub">(${fmtM(Math.max(10,meters(s.w)))})</span></li>`).join('')}</ol>
     <div class="hint" style="margin-top:10px">Entfernungen geschätzt (Maßstab aus Parzellenbreite).</div>`;
