@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Königsmoor Wegweiser</title>
+<style>
+:root{
+  --bg:#f4f4f1; --panel:#ffffff; --text:#1f2421; --muted:#6b726d; --line:#dfe2dd;
+  --accent:#e8772e; --route:#1f6fe0; --start:#2e9d4b; --goal:#d93b2b; --chip:#f0f1ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151816; --panel:#1f2321; --text:#ecefec; --muted:#9aa29c; --line:#323833;
+    --chip:#2a2f2c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151816; --panel:#1f2321; --text:#ecefec; --muted:#9aa29c; --line:#323833; --chip:#2a2f2c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#map{position:absolute;inset:0;touch-action:none;cursor:grab;background:#fff}
+#map.drag{cursor:grabbing}
+svg{width:100%;height:100%;display:block}
+.way{fill:none;stroke:transparent;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
+.way.hl{stroke:var(--accent);stroke-opacity:.85;animation:blink 1s ease-in-out infinite}
+.way.sel{stroke:var(--accent);stroke-opacity:.95;stroke-width:8}
+@keyframes blink{50%{stroke-opacity:.25}}
+.route{fill:none;stroke:var(--route);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1 9;opacity:.95}
+.route-bg{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.route-line{fill:none;stroke:var(--route);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* top bar */
+#top{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:8px;z-index:5;max-width:520px}
+.field{flex:1;display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:14px;
+  padding:0 12px;box-shadow:0 2px 10px rgba(0,0,0,.15);height:48px}
+.field input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;min-width:0}
+.btn{border:0;background:var(--panel);color:var(--text);border-radius:14px;height:48px;min-width:48px;
+  font-size:18px;box-shadow:0 2px 10px rgba(0,0,0,.15);cursor:pointer}
+.btn.primary{background:var(--route);color:#fff}
+.x{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;padding:4px}
+
+/* bottom sheet */
+#sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--panel);
+  border-radius:18px 18px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.18);max-height:46vh;display:flex;flex-direction:column;
+  max-width:520px;margin:0 auto;transition:max-height .25s}
+#sheet.compact{max-height:150px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 4px;flex:none;cursor:pointer}
+#sheetBody{overflow-y:auto;padding:4px 16px 16px}
+.hint{color:var(--muted);font-size:13px;margin:4px 0 8px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.list li:last-child{border-bottom:0}
+.list li:hover{background:var(--chip)}
+.list .k{font-size:12px;color:var(--muted);margin-left:6px}
+.list .m{color:var(--muted);font-size:14px;white-space:nowrap}
+h2{margin:6px 0 2px;font-size:20px}
+.row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pill{border:0;border-radius:12px;padding:12px 14px;font-size:15px;cursor:pointer;background:var(--chip);color:var(--text)}
+.pill.primary{background:var(--route);color:#fff}
+.big{font-size:28px;font-weight:700}
+.sub{color:var(--muted);font-size:14px}
+.steps{margin:10px 0 0;padding-left:20px;font-size:15px;line-height:1.6}
+
+/* route form */
+#routeForm{display:none;flex-direction:column;gap:6px;flex:1}
+#routeForm .field{height:44px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.dot.s{background:var(--start)} .dot.g{background:var(--goal);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
+#sugg{position:absolute;left:12px;right:12px;top:118px;z-index:7;max-width:520px;background:var(--panel);
+  border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);max-height:40vh;overflow:auto;display:none;padding:0 12px}
+#zoom{position:absolute;right:12px;bottom:calc(46vh + 12px);z-index:5;display:flex;flex-direction:column;gap:6px}
+#sheet.compact ~ #zoom{bottom:162px}
+#zoom .btn{height:42px;min-width:42px}
+</style>
+</head>
+<body>
+<div id="map"><svg id="svg" viewBox="0 0 820 580">
+  <image href="lageplan.jpg" x="0" y="0" width="820" height="580"/>
+  <g id="ways"></g>
+  <g id="routeG"></g>
+  <g id="marks"></g>
+</svg></div>
+
+<div id="top">
+  <div class="field" id="searchField">
+    <span>🔍</span>
+    <input id="q" placeholder="Weg oder Ort suchen …" autocomplete="off">
+    <button class="x" id="qx" title="Leeren">✕</button>
+  </div>
+  <div id="routeForm">
+    <div class="field"><span class="dot s"></span><input id="from" placeholder="Von …" autocomplete="off"></div>
+    <div class="field"><span class="dot g"></span><input id="to" placeholder="Nach …" autocomplete="off"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <button class="btn primary" id="modeBtn" title="Route planen">➜</button>
+    <button class="btn" id="swapBtn" title="Start und Ziel tauschen" style="display:none">⇅</button>
+  </div>
+</div>
+<div id="sugg"></div>
+
+<div id="sheet"><div class="grab" id="grab"></div><div id="sheetBody"></div></div>
+<div id="zoom">
+  <button class="btn" id="zin">＋</button>
+  <button class="btn" id="zout">－</button>
+  <button class="btn" id="zall" title="Ganzer Plan">⤢</button>
+</div>
+
+<script>
+// Maßstab: geschätzt aus 12–13 m Parzellenbreite. Bei bekannter echter Weglänge hier kalibrieren.
+const M_PER_PX = 0.9;
+const WALK_KMH = 4;
+
+// Wegverläufe in Bildpixeln des Lageplans (820×580)
+const WAYS = {
+  "Amselweg":    [[505,357],[505,448]],
+  "Birkenweg":   [[549,357],[548,448]],
+  "Cliviaweg":   [[590,357],[601,402],[612,449]],
+  "Drosselweg":  [[631,354],[642,402],[653,450]],
+  "Erlenweg":    [[495,355],[549,356],[590,356],[631,354]],
+  "Fasanenweg":  [[503,203],[513,240],[523,274],[530,354]],
+  "Ginsterweg":  [[553,212],[565,248],[577,285],[593,354]],
+  "Habichtsweg": [[588,173],[606,237],[620,295],[631,354]],
+  "Igelweg":     [[236,150],[284,150],[381,150],[472,151],[530,163],[588,173]],
+  "Kuckucksweg": [[472,190],[503,203],[553,212]],
+  "Lilienweg":   [[466,198],[473,230],[480,265],[482,273]],
+  "Meisenweg":   [[200,183],[284,183],[381,186],[386,194],[472,194]],
+  "Nelkenweg":   [[381,224],[468,222]],
+  "Primelweg":   [[118,265],[284,265],[381,265],[480,265]],
+  "Rosenweg":    [[157,224],[284,224],[381,224]],
+  "Sonnenweg":   [[445,303],[446,330],[447,355]],
+  "Tulpenweg":   [[105,307],[250,307],[385,306]]
+};
+// Unbenannte Verbindungsstücke (vor Ort prüfen, ob durchgängig begehbar)
+const LINKS = [
+  [[284,150],[284,183],[284,224],[284,265]],
+  [[381,150],[381,186],[381,224],[381,265]],
+  [[236,150],[200,183],[157,224],[118,265],[105,307]],
+  [[385,306],[445,303],[448,276],[482,273]],
+  [[482,273],[523,274]],
+  [[385,306],[390,360],[395,440],[403,447]],
+  [[447,355],[495,355]],
+  [[472,151],[472,190],[472,194],[466,198]],
+  [[403,447],[505,448],[548,448],[612,449],[653,450]]
+];
+const PLACES = [
+  {name:"Standort / Eingang", p:[403,442], start:true},
+  {name:"Büro (79)", p:[535,372]},
+  {name:"Schwimmbecken", p:[490,290]},
+  {name:"Spielplatz", p:[465,290]},
+  {name:"Gedenkstätte Königsmoor", p:[473,337]},
+  {name:"WC / Duschen", p:[509,338]},
+  {name:"Wohnhaus (77)", p:[265,340]},
+  {name:"Haus 75", p:[330,410]},
+  {name:"Grünabfall / Müllpresse", p:[105,340]},
+  {name:"Kinderspielfläche", p:[562,198]},
+  {name:"Sportplatz", p:[140,175]},
+  {name:"Teiche", p:[200,400]},
+  {name:"Parkplatz Gäste", p:[392,400]}
+];
+
+// ---------- Geometrie ----------
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const plen=pts=>pts.slice(1).reduce((s,p,i)=>s+dist(pts[i],p),0);
+const meters=px=>Math.round(px*M_PER_PX/10)*10;
+const fmtM=m=>m>=1000?(m/1000).toFixed(2).replace('.',',')+' km':m+' m';
+const minutes=m=>Math.max(1,Math.round(m/1000/WALK_KMH*60));
+const ptsAttr=pts=>pts.map(p=>p.join(',')).join(' ');
+
+// ---------- Graph ----------
+const nodes=[]; const key=p=>Math.round(p[0])+','+Math.round(p[1]);
+const nodeIdx=new Map(); const adj=[]; const segs=[];
+function node(p){const k=key(p);if(nodeIdx.has(k))return nodeIdx.get(k);
+  const i=nodes.length;nodes.push(p);adj.push([]);nodeIdx.set(k,i);return i;}
+function addLine(pts,name){for(let i=1;i<pts.length;i++){const a=node(pts[i-1]),b=node(pts[i]);
+  const w=dist(pts[i-1],pts[i]);adj[a].push([b,w,name]);adj[b].push([a,w,name]);segs.push({a,b,name});}}
+for(const [n,pts] of Object.entries(WAYS)) addLine(pts,n);
+for(const l of LINKS) addLine(l,null);
+
+function project(p){ // nächster Punkt auf dem Wegenetz
+  let best=null;
+  for(const s of segs){const A=nodes[s.a],B=nodes[s.b];const dx=B[0]-A[0],dy=B[1]-A[1];
+    const L=dx*dx+dy*dy;let t=L?((p[0]-A[0])*dx+(p[1]-A[1])*dy)/L:0;t=Math.max(0,Math.min(1,t));
+    const q=[A[0]+t*dx,A[1]+t*dy];const d=dist(p,q);if(!best||d<best.d)best={d,q,s,t};}
+  return best;
+}
+function shortest(pA,pB){
+  const A=project(pA),B=project(pB);
+  const N=nodes.length, S=N, T=N+1;
+  const extra=new Map(); const push=(u,v,w,name)=>{if(!extra.has(u))extra.set(u,[]);extra.get(u).push([v,w,name]);};
+  const pos=i=>i===S?A.q:i===T?B.q:nodes[i];
+  for(const [X,id] of [[A,S],[B,T]]){
+    push(id,X.s.a,dist(X.q,nodes[X.s.a]),X.s.name);push(X.s.a,id,dist(X.q,nodes[X.s.a]),X.s.name);
+    push(id,X.s.b,dist(X.q,nodes[X.s.b]),X.s.name);push(X.s.b,id,dist(X.q,nodes[X.s.b]),X.s.name);
+  }
+  if(A.s===B.s){push(S,T,dist(A.q,B.q),A.s.name);}
+  const D=new Array(N+2).fill(Infinity),prev=new Array(N+2).fill(-1),pn=new Array(N+2);
+  const done=new Array(N+2).fill(false);D[S]=0;
+  for(;;){let u=-1,m=Infinity;for(let i=0;i<N+2;i++)if(!done[i]&&D[i]<m){m=D[i];u=i;}
+    if(u<0||u===T)break;done[u]=true;
+    const edges=(u<N?adj[u]:[]).concat(extra.get(u)||[]);
+    for(const [v,w,name] of edges){if(D[u]+w<D[v]){D[v]=D[u]+w;prev[v]=u;pn[v]=name;}}}
+  if(D[T]===Infinity)return null;
+  const path=[],names=[];for(let v=T;v!==-1;v=prev[v]){path.unshift(pos(v));if(prev[v]!==-1)names.unshift({n:pn[v],w:dist(pos(prev[v]),pos(v))});}
+  // Abschnitte zusammenfassen
+  const steps=[];for(const s of names){const n=s.n||'Verbindungsweg';const l=steps[steps.length-1];
+    if(l&&l.n===n)l.w+=s.w;else steps.push({n,w:s.w});}
+  return {path:[pA,...path,pB],len:D[T]+A.d+B.d,steps:steps.filter(s=>s.w>2)};
+}
+
+// ---------- Ziele (Wege + Orte) ----------
+const TARGETS=[
+  ...Object.entries(WAYS).map(([n,pts])=>({name:n,type:'Weg',pts,len:meters(plen(pts)),
+     p:pts[Math.floor(pts.length/2)] && midpoint(pts)})),
+  ...PLACES.map(o=>({name:o.name,type:'Ort',p:o.p,start:o.start}))
+];
+function midpoint(pts){let h=plen(pts)/2;for(let i=1;i<pts.length;i++){const d=dist(pts[i-1],pts[i]);
+  if(h<=d){const t=h/d;return [pts[i-1][0]+t*(pts[i][0]-pts[i-1][0]),pts[i-1][1]+t*(pts[i][1]-pts[i-1][1])];}h-=d;}return pts[0];}
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss');
+function find(q){q=norm(q.trim());if(!q)return TARGETS.filter(t=>t.type==='Weg');
+  return TARGETS.filter(t=>norm(t.name).includes(q)).sort((a,b)=>norm(a.name).indexOf(q)-norm(b.name).indexOf(q));}
+
+// ---------- Zeichnen ----------
+const $=id=>document.getElementById(id);
+const svg=$('svg'),gW=$('ways'),gR=$('routeG'),gM=$('marks');
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const wayEls={};
+for(const [n,pts] of Object.entries(WAYS)){const e=el('polyline',{points:ptsAttr(pts),class:'way'});
+  e.addEventListener('click',ev=>{if(moved)return;showWay(n);});wayEls[n]=e;gW.appendChild(e);}
+function clearHl(){for(const e of Object.values(wayEls))e.classList.remove('hl','sel');}
+function markStart(p){gM.appendChild(el('circle',{cx:p[0],cy:p[1],r:6,fill:'#2e9d4b',stroke:'#fff','stroke-width':2.5}));}
+function markGoal(p){const g=el('g',{transform:`translate(${p[0]},${p[1]})`});
+  g.appendChild(el('path',{d:'M0 0 C-3 -6 -8 -9 -8 -14 A8 8 0 1 1 8 -14 C8 -9 3 -6 0 0Z',fill:'#d93b2b',stroke:'#fff','stroke-width':2}));
+  g.appendChild(el('circle',{cx:0,cy:-14,r:3,fill:'#fff'}));gM.appendChild(g);}
+
+// ---------- Zoom / Verschieben ----------
+let vb=[0,0,820,580];
+function setVB(v,anim){vb=clampVB(v);svg.setAttribute('viewBox',vb.join(' '));}
+function clampVB(v){let [x,y,w,h]=v;const ar=svg.clientWidth/svg.clientHeight||1.4;
+  w=Math.max(60,Math.min(1100,w));h=w/ar;x=Math.max(-w*.5,Math.min(820-w*.5,x));y=Math.max(-h*.5,Math.min(580-h*.5,y));return [x,y,w,h];}
+function fitBox(b,pad=40){const ar=svg.clientWidth/svg.clientHeight||1.4;
+  const sheetH=$('sheet').getBoundingClientRect().height, topH=$('top').getBoundingClientRect().bottom;
+  const visH=svg.clientHeight-sheetH-topH; const fracTop=topH/svg.clientHeight, fracVis=Math.max(.25,visH/svg.clientHeight);
+  let w=Math.max(b[2]-b[0]+pad*2,120),h=Math.max(b[3]-b[1]+pad*2,90);
+  if(w/(h/fracVis)>ar)h=w/ar*fracVis;else w=h/fracVis*ar;
+  const H=w/ar;const cx=(b[0]+b[2])/2,cy=(b[1]+b[3])/2;
+  animTo([cx-w/2,cy-H*(fracTop+fracVis/2),w,H]);}
+function bbox(pts){const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];}
+let animId;function animTo(t){cancelAnimationFrame(animId);const s=vb.slice();const t0=performance.now();
+  const step=now=>{const k=Math.min(1,(now-t0)/350),e=1-Math.pow(1-k,3);
+    setVB(s.map((v,i)=>v+(t[i]-v)*e));if(k<1)animId=requestAnimationFrame(step);};animId=requestAnimationFrame(step);}
+function showAll(){animTo([60,90,640,420].length?fitAllVB():0);}
+function fitAllVB(){const ar=svg.clientWidth/svg.clientHeight;let w=640,h=w/ar;if(h<380){h=380;w=h*ar;}return [400-w/2,280-h/2,w,h];}
+const map=$('map');const ptrs=new Map();let moved=false,last=null,pinch=null;
+map.addEventListener('pointerdown',e=>{map.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);moved=false;
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:dist(a,b),vb:vb.slice(),c:[(a[0]+b[0])/2,(a[1]+b[1])/2]};}});
+map.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  const sc=vb[2]/svg.clientWidth;
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()];const f=pinch.d/dist(a,b);const r=svg.getBoundingClientRect();
+    const cx=pinch.vb[0]+(pinch.c[0]-r.left)*pinch.vb[2]/r.width,cy=pinch.vb[1]+(pinch.c[1]-r.top)*pinch.vb[3]/r.height;
+    const w=pinch.vb[2]*f,h=pinch.vb[3]*f;setVB([cx-(cx-pinch.vb[0])*f,cy-(cy-pinch.vb[1])*f,w,h]);moved=true;return;}
+  const dx=e.clientX-prev[0],dy=e.clientY-prev[1];if(Math.abs(dx)+Math.abs(dy)>2)moved=true;
+  map.classList.add('drag');setVB([vb[0]-dx*sc,vb[1]-dy*sc,vb[2],vb[3]]);});
+const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;map.classList.remove('drag');};
+map.addEventListener('pointerup',up);map.addEventListener('pointercancel',up);
+map.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.deltaY>0?1.15:1/1.15,e.clientX,e.clientY);},{passive:false});
+function zoomAt(f,px,py){const r=svg.getBoundingClientRect();if(px==null){px=r.left+r.width/2;py=r.top+r.height/2;}
+  const cx=vb[0]+(px-r.left)*vb[2]/r.width,cy=vb[1]+(py-r.top)*vb[3]/r.height;
+  setVB([cx-(cx-vb[0])*f,cy-(cy-vb[1])*f,vb[2]*f,vb[3]*f]);}
+$('zin').onclick=()=>zoomAt(1/1.4);$('zout').onclick=()=>zoomAt(1.4);$('zall').onclick=()=>animTo(fitAllVB());
+
+// ---------- Oberfläche ----------
+const sheet=$('sheet'),body=$('sheetBody');
+let mode='search',current=null,routeFrom=null,routeTo=null;
+$('grab').onclick=()=>sheet.classList.toggle('compact');
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function renderList(q){
+  clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
+  const res=find(q);
+  if(!q.trim()){for(const e of Object.values(wayEls))e.classList.add('hl');}
+  else for(const t of res)if(t.type==='Weg')wayEls[t.name].classList.add('hl');
+  body.innerHTML=`<div class="hint">${q.trim()?res.length+' Treffer':'Alle '+Object.keys(WAYS).length+' Wege – tippen zum Suchen'}</div>`+
+    (res.length?`<ul class="list">${res.map((t,i)=>`<li data-i="${TARGETS.indexOf(t)}"><span>${esc(t.name)}<span class="k">${t.type}</span></span><span class="m">${t.len?'≈ '+fmtM(t.len):''}</span></li>`).join('')}</ul>`
+    :`<div class="hint">Nichts gefunden. Versuch es mit einem Teil des Namens, z. B. „gin“.</div>`);
+  body.querySelectorAll('li').forEach(li=>li.onclick=()=>showTarget(TARGETS[+li.dataset.i]));
+  if(q.trim()&&res.length===1)showTarget(res[0],true);
+}
+function showWay(n){showTarget(TARGETS.find(t=>t.name===n));}
+function showTarget(t,keepTyping){
+  if(mode==='route'){return;}
+  current=t;clearHl();gR.innerHTML='';gM.innerHTML='';
+  if(!keepTyping)$('q').value=t.name;
+  if(t.type==='Weg'){wayEls[t.name].classList.add('sel');fitBox(bbox(t.pts),35);}
+  else{markGoal(t.p);fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);}
+  sheet.classList.add('compact');
+  body.innerHTML=`<h2>${esc(t.name)}</h2><div class="sub">${t.type==='Weg'?'Länge ca. '+fmtM(t.len)+' · ca. '+minutes(t.len)+' Min. zu Fuß':'Ort auf dem Platz'}</div>
+   <div class="row"><button class="pill primary" id="goHere">➜ Route hierher</button><button class="pill" id="back">Alle Wege</button></div>`;
+  $('goHere').onclick=()=>{startRoute(PLACES[0],t);};
+  $('back').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());};
+  setTimeout(()=>{if(t.type==='Weg')fitBox(bbox(t.pts),35);else fitBox([t.p[0]-50,t.p[1]-40,t.p[0]+50,t.p[1]+40],10);},260);
+}
+$('q').addEventListener('input',e=>renderList(e.target.value));
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=find(e.target.value);if(r.length)showTarget(r[0]);e.target.blur();}});
+$('qx').onclick=()=>{$('q').value='';renderList('');animTo(fitAllVB());$('q').focus();};
+
+// Route
+function setMode(m){mode=m;$('searchField').style.display=m==='search'?'flex':'none';
+  $('routeForm').style.display=m==='route'?'flex':'none';$('swapBtn').style.display=m==='route'?'block':'none';
+  $('modeBtn').textContent=m==='route'?'✕':'➜';$('modeBtn').title=m==='route'?'Routenplanung schließen':'Route planen';
+  $('modeBtn').classList.toggle('primary',m==='search');}
+$('modeBtn').onclick=()=>{if(mode==='route'){setMode('search');$('sugg').style.display='none';$('q').value='';renderList('');animTo(fitAllVB());}
+  else startRoute(PLACES[0],current);};
+function startRoute(from,to){setMode('route');routeFrom=asTarget(from);routeTo=to?asTarget(to):null;
+  $('from').value=routeFrom?routeFrom.name:'';$('to').value=routeTo?routeTo.name:'';
+  if(!routeTo){$('to').focus();showSugg($('to'));}calcRoute();}
+function asTarget(x){return x&&(x.type?x:TARGETS.find(t=>t.name===x.name));}
+$('swapBtn').onclick=()=>{[routeFrom,routeTo]=[routeTo,routeFrom];$('from').value=routeFrom?routeFrom.name:'';$('to').value=routeTo?routeTo.name:'';calcRoute();};
+let suggFor=null;
+function showSugg(inp){suggFor=inp;const r=find(inp.value).concat(inp.value.trim()?[]:PLACES.map(asTarget));
+  const uniq=[...new Set(r)];const s=$('sugg');s.style.top=($('top').getBoundingClientRect().bottom+6)+'px';
+  s.innerHTML=`<ul class="list">${uniq.map(t=>`<li data-i="${TARGETS.indexOf(t)}"><span>${esc(t.name)}<span class="k">${t.type}</span></span></li>`).join('')}</ul>`;
+  s.style.display=uniq.length?'block':'none';
+  s.querySelectorAll('li').forEach(li=>li.onpointerdown=ev=>{ev.preventDefault();const t=TARGETS[+li.dataset.i];
+    if(inp.id==='from')routeFrom=t;else routeTo=t;inp.value=t.name;s.style.display='none';inp.blur();
+    if(inp.id==='from'&&!routeTo){$('to').focus();showSugg($('to'));}calcRoute();});}
+for(const inp of [$('from'),$('to')]){inp.addEventListener('focus',()=>{inp.select();showSugg(inp);});
+  inp.addEventListener('input',()=>showSugg(inp));inp.addEventListener('blur',()=>setTimeout(()=>{if(suggFor===inp)$('sugg').style.display='none';},150));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=find(inp.value);if(r.length){if(inp.id==='from')routeFrom=r[0];else routeTo=r[0];inp.value=r[0].name;$('sugg').style.display='none';inp.blur();calcRoute();}}});}
+function anchor(t,other){ // Punkt für Wegziele: nächster Punkt des Weges zum anderen Ende
+  if(t.type!=='Weg')return t.p;if(!other)return midpoint(t.pts);const o=other.type==='Weg'?midpoint(other.pts):other.p;
+  let best=null;for(let i=1;i<t.pts.length;i++){const A=t.pts[i-1],B=t.pts[i];const dx=B[0]-A[0],dy=B[1]-A[1],L=dx*dx+dy*dy;
+    let k=((o[0]-A[0])*dx+(o[1]-A[1])*dy)/L;k=Math.max(0,Math.min(1,k));const q=[A[0]+k*dx,A[1]+k*dy];const d=dist(o,q);if(!best||d<best.d)best={d,q};}
+  // Für einen Weg als Ziel: zum Anfang des Weges (Einmündung) statt zur Mitte führen
+  return best.q;}
+function calcRoute(){clearHl();gR.innerHTML='';gM.innerHTML='';sheet.classList.remove('compact');
+  if(!routeFrom||!routeTo){body.innerHTML=`<div class="hint">Start (grün) und Ziel (rot) wählen. Tipp: ⇅ tauscht beide.</div>`;
+    if(routeFrom){const p=anchor(routeFrom);markStart(p);}return;}
+  const pA=anchor(routeFrom,routeTo),pB=anchor(routeTo,routeFrom);
+  if(routeTo.type==='Weg')wayEls[routeTo.name].classList.add('sel');
+  const r=shortest(pA,pB);
+  if(!r){body.innerHTML='<div class="hint">Keine Verbindung gefunden.</div>';return;}
+  gR.appendChild(el('polyline',{points:ptsAttr(r.path),class:'route-bg'}));
+  gR.appendChild(el('polyline',{points:ptsAttr(r.path),class:'route-line'}));
+  markStart(pA);markGoal(pB);
+  const m=meters(r.len);
+  body.innerHTML=`<div><span class="big">${fmtM(m)}</span> <span class="sub">· ca. ${minutes(m)} Min. zu Fuß</span></div>
+    <div class="sub">${esc(routeFrom.name)} → ${esc(routeTo.name)}</div>
+    <ol class="steps">${r.steps.map(s=>`<li>${esc(s.n)} <span class="sub">(${fmtM(Math.max(10,meters(s.w)))})</span></li>`).join('')}</ol>
+    <div class="hint" style="margin-top:10px">Entfernungen geschätzt (Maßstab aus Parzellenbreite).</div>`;
+  sheet.classList.add('compact');
+  setTimeout(()=>fitBox(bbox(r.path),30),30);
+}
+
+renderList('');
+requestAnimationFrame(()=>setVB(fitAllVB()));
+window.addEventListener('resize',()=>setVB(vb));
+</script>
+</body>
+</html>
