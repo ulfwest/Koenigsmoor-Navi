@@ -13,7 +13,7 @@ Wege zur Parzelle – Wegweiser für den Campingplatz Königsmoor.
 - **Entfernungen:** Jede Liste zeigt ca. Meter ab Eingang; Weglängen geschätzt und auf 10 m gerundet.
 
 ## Wege
-Amselweg, Birkenweg, Cliviaweg, Drosselweg, Erlenweg, Fasanenweg, Ginsterweg, Habichtsweg, Igelweg, Kuckucksweg, Lilienweg, Meisenweg, Nelkenweg, Primelweg, Rosenweg, Sonnenweg, Tulpenweg
+Amselweg, Birkenweg, Cliviaweg, Drosselweg, Erlenweg, Finkenweg, Ginsterweg, Habichtsweg, Igelweg, Kuckucksweg, Lilienweg, Meisenweg, Nelkenweg, Primelweg, Rosenweg, Sonnenweg, Tulpenweg
 
 ## Annahmen / offen
 - Maßstab 0,57 m pro Planpixel (aus dem Satellitenfoto anhand geparkter Autos ermittelt, ca. ±15 %), Gehtempo 4 km/h. Anpassen über `M_PER_PX` und `WALK_KMH` in `index.html`.
